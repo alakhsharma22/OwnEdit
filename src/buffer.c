@@ -253,6 +253,38 @@ char bufferCharAt(const buffer *buf, size_t pos) {
     return '\0';
 }
 
+char *bufferCopyRange(const buffer *buf, size_t pos, size_t len) {
+    if (pos > buf->length) pos = buf->length;
+    if (pos + len > buf->length) len = buf->length - pos;
+
+    char *copy = malloc(len ? len : 1);
+    if (copy == NULL) termDie("malloc");
+    if (len == 0) return copy;
+
+    size_t off = 0;
+    piece *p = buf->head;
+    size_t cur = 0;
+
+    while (p && off < len) {
+        size_t piece_start = cur;
+        size_t piece_end = cur + p->length;
+
+        if (piece_end > pos && piece_start < pos + len) {
+            size_t take_start = pos > piece_start ? pos - piece_start : 0;
+            size_t take_end = (pos + len) < piece_end ? (pos + len) - piece_start : p->length;
+            size_t take_len = take_end - take_start;
+            const char *src = pieceData(buf, p);
+            memcpy(copy + off, src + p->start + take_start, take_len);
+            off += take_len;
+        }
+
+        cur = piece_end;
+        p = p->next;
+    }
+
+    return copy;
+}
+
 void bufferRebuildLines(buffer *buf) {
     linesClear(&buf->lines);
     linesPush(&buf->lines, 0);
