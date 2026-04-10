@@ -19,6 +19,14 @@ void editorProcessKeypress(void) {
             editorSave();
             break;
 
+        case CTRL_KEY('z'):
+            if (historyUndo() == -1) editorSetStatus("nothing to undo");
+            break;
+
+        case CTRL_KEY('y'):
+            if (historyRedo() == -1) editorSetStatus("nothing to redo");
+            break;
+
         case HOME_KEY:
         case END_KEY:
         case ARROW_UP:
