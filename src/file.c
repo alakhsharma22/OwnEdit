@@ -79,14 +79,25 @@ int fileWriteAll(const char *filename, const char *data, size_t len) {
 }
 
 void editorOpen(const char *filename) {
+    char *newname = dupstr(filename);
+    if (newname == NULL) termDie("strdup");
+
     free(E.filename);
-    E.filename = dupstr(filename);
-    if (E.filename == NULL) termDie("strdup");
+    E.filename = newname;
 
     if (bufferLoadFile(&E.buf, filename) == -1) {
-        editorSetStatus("open failed: %s", strerror(errno));
-        return;
+        if (errno != ENOENT) {
+            editorSetStatus("open failed: %s", strerror(errno));
+            return;
+        }
+
+        bufferFree(&E.buf);
+        bufferInit(&E.buf);
+        editorSetStatus("new file: %s", filename);
     }
+
+    historyFree();
+    historyInit();
 
     E.cur.pos = 0;
     E.cur.want_col = 0;
