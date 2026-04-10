@@ -85,6 +85,31 @@ typedef struct {
     int cap;
 } append_buffer;
 
+typedef enum {
+    EDIT_INSERT,
+    EDIT_DELETE
+} edit_kind;
+
+typedef struct {
+    edit_kind kind;
+    size_t pos;
+    char *data;
+    size_t len;
+    cursor before;
+    cursor after;
+} edit_action;
+
+typedef struct history_node {
+    edit_action act;
+    struct history_node *next;
+} history_node;
+
+typedef struct {
+    history_node *undo_top;
+    history_node *redo_top;
+    int replaying;
+} history;
+
 typedef struct {
     struct termios orig_termios;
     int rawmode;
@@ -96,6 +121,7 @@ typedef struct {
     int quit_times;
     char status[160];
     time_t status_time;
+    history hist;
 } editor;
 
 extern editor E;
@@ -126,6 +152,7 @@ void bufferInsertBytes(buffer *buf, size_t pos, const char *s, size_t len);
 void bufferDeleteRange(buffer *buf, size_t pos, size_t len);
 char *bufferFlatten(const buffer *buf, size_t *out_len);
 char bufferCharAt(const buffer *buf, size_t pos);
+char *bufferCopyRange(const buffer *buf, size_t pos, size_t len);
 void bufferRebuildLines(buffer *buf);
 size_t bufferLineCount(const buffer *buf);
 size_t bufferLineStart(const buffer *buf, size_t row);
@@ -165,5 +192,9 @@ void commandsMoveCursor(int key);
 
 void historyInit(void);
 void historyFree(void);
+void historyRecordInsert(size_t pos, const char *data, size_t len, const cursor *before, const cursor *after);
+void historyRecordDelete(size_t pos, const char *data, size_t len, const cursor *before, const cursor *after);
+int historyUndo(void);
+int historyRedo(void);
 
 #endif
