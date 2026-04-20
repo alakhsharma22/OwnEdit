@@ -29,6 +29,9 @@ void termDie(const char *s) {
 void termDisableRawMode(void) {
     if (!E.rawmode) return;
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios);
+    write(STDOUT_FILENO, "\r\n", 2);
+    write(STDOUT_FILENO, "\x1b[2J", 4);
+    write(STDOUT_FILENO, "\x1b[H", 3);
     E.rawmode = 0;
 }
 

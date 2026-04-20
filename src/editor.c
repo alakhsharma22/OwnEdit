@@ -3,7 +3,6 @@
 editor E;
 
 void editorInit(void) {
-    E.rawmode = 0;
     bufferInit(&E.buf);
     cursorInit(&E.cur);
     viewInit(&E.view);
